@@ -3,34 +3,21 @@
 # Install dependencies
 python -m pip install -r requirements.txt
 
-# Clean and create build directory
+# Clean build directory
 rm -rf build
 mkdir -p build
-mkdir -p build/api
-
-# Copy static assets first
-cp -r static/* build/
 
 # Generate static files
 python freeze.py
 
-# Ensure index.html is in the root
+# Ensure index.html exists in root
 if [ ! -f "build/index.html" ]; then
-    cp templates/index.html build/index.html
+    cp build/*/index.html build/index.html 2>/dev/null || true
 fi
 
-# Create necessary GitHub Pages files
-touch build/.nojekyll  # Prevent Jekyll processing
-echo "databoard.work" > build/CNAME  # Set custom domain
-
-# Ensure API data directory exists and has proper permissions
-mkdir -p build/api
-chmod 755 build/api
+# Create .nojekyll file to disable Jekyll processing
+touch build/.nojekyll
 
 # Print directory structure for verification
 echo "Build directory contents:"
-ls -la build/
-echo "API directory contents:"
-ls -la build/api/
-
-echo "Build completed. Files ready for GitHub Pages deployment." 
+ls -la build/ 

@@ -1,6 +1,5 @@
 from flask_frozen import Freezer
 from app import app
-import os
 
 # Configure Freezer for GitHub Pages
 app.config['FREEZER_DESTINATION'] = 'build'
@@ -14,8 +13,7 @@ freezer = Freezer(app)
 
 @freezer.register_generator
 def api_data():
-    # Generate the API endpoint as a static JSON file
-    yield {'endpoint': '/api/data'}
+    yield {'path': '/api/data'}
 
 @freezer.register_generator
 def index():
