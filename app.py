@@ -15,17 +15,18 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 # Configure app for GitHub Pages
-app.config['APPLICATION_ROOT'] = '/databoard'
-
-# URL Prefix configuration
 if os.environ.get('GITHUB_ACTIONS'):
-    app.config['PREFERRED_URL_SCHEME'] = 'https'
-    app.config['APPLICATION_ROOT'] = '/databoard'
+    app.config.update(
+        SERVER_NAME='databoardss.github.io',
+        APPLICATION_ROOT='/databoard',
+        PREFERRED_URL_SCHEME='https'
+    )
 else:
-    app.config['APPLICATION_ROOT'] = ''
-
-# Remove server name configuration as it's causing conflicts
-app.config.pop('SERVER_NAME', None)
+    app.config.update(
+        SERVER_NAME='localhost:5000',
+        APPLICATION_ROOT='/',
+        PREFERRED_URL_SCHEME='http'
+    )
 
 # Load and process the data
 logger.info("\n=== Loading and Processing Data ===")
@@ -143,14 +144,15 @@ signal.signal(signal.SIGTERM, lambda s, f: sys.exit(0))
 
 # URL generation helper
 def get_base_url():
-    return app.config['APPLICATION_ROOT']
+    if os.environ.get('GITHUB_ACTIONS'):
+        return '/databoard'
+    return ''
 
 # Register URL processors
 @app.context_processor
 def utility_processor():
     def asset_url(path):
         base = get_base_url()
-        # Handle both absolute and relative paths
         path = path.lstrip('/')
         if base:
             return f"{base}/{path}"
@@ -158,6 +160,9 @@ def utility_processor():
     return dict(asset_url=asset_url)
 
 if __name__ == '__main__':
+    # Override server name for local development
+    app.config['SERVER_NAME'] = None
+    
     port = find_free_port(5006, 5010)
     if port is None:
         print("No free ports found between 5006 and 5010")
