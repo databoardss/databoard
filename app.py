@@ -17,6 +17,7 @@ app = Flask(__name__)
 # Configure app for GitHub Pages
 app.config['APPLICATION_ROOT'] = '/databoard'
 app.config['PREFERRED_URL_SCHEME'] = 'https'
+app.config['SERVER_NAME'] = 'databoardss.github.io' if os.environ.get('GITHUB_ACTIONS') else None
 
 # Load and process the data
 logger.info("\n=== Loading and Processing Data ===")
@@ -135,7 +136,7 @@ signal.signal(signal.SIGTERM, lambda s, f: sys.exit(0))
 # URL generation helper
 def get_base_url():
     if os.environ.get('GITHUB_ACTIONS'):
-        return 'https://databoardss.github.io/databoard'
+        return '/databoard'
     return ''
 
 # Register URL processors
