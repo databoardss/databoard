@@ -17,7 +17,9 @@ app = Flask(__name__)
 # Configure app for GitHub Pages
 app.config['APPLICATION_ROOT'] = '/databoard'
 app.config['PREFERRED_URL_SCHEME'] = 'https'
-app.config['SERVER_NAME'] = 'databoardss.github.io' if os.environ.get('GITHUB_ACTIONS') else None
+
+# Remove server name configuration as it's causing conflicts
+app.config.pop('SERVER_NAME', None)
 
 # Load and process the data
 logger.info("\n=== Loading and Processing Data ===")
