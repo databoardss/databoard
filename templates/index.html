@@ -687,7 +687,10 @@
         // Update the fetch URL to use relative path
         async function fetchData() {
             try {
-                const response = await fetch('api/data');
+                const baseUrl = window.location.hostname.includes('github.io') 
+                    ? '/databoard'
+                    : '';
+                const response = await fetch(`${baseUrl}/api/data`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }

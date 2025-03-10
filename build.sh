@@ -22,7 +22,15 @@ echo "Setting up GitHub Pages files..."
 
 # Create necessary GitHub Pages files
 touch build/.nojekyll  # Prevent Jekyll processing
-echo "databoardss.github.io/databoard" > build/CNAME  # Set GitHub Pages domain
+
+# Copy index.html to root if it's in a subdirectory
+find build -name "index.html" -exec cp {} build/ \;
+
+# Create API directory and ensure data file exists
+mkdir -p build/api
+if [ -f "build/api_data" ]; then
+    mv build/api_data build/api/data
+fi
 
 # Ensure proper permissions
 find build -type d -exec chmod 755 {} \;
@@ -35,13 +43,19 @@ if [ ! -f "build/index.html" ]; then
     exit 1
 fi
 
-echo "Checking API data..."
-if [ ! -f "build/api/data" ]; then
-    echo "Warning: API data file not found at expected location"
-fi
-
 # Print directory structure for verification
 echo "Build directory structure:"
-tree build/ || ls -R build/
+ls -R build/
+
+# Verify critical files
+echo "Verifying critical files..."
+for file in "index.html" "api/data" ".nojekyll"; do
+    if [ -f "build/$file" ]; then
+        echo "✓ $file exists"
+    else
+        echo "✗ $file missing"
+        exit 1
+    fi
+done
 
 echo "Build completed successfully!" 

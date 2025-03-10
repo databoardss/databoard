@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, url_for
 import pandas as pd
 from datetime import datetime
 import logging
@@ -6,12 +6,17 @@ import socket
 import atexit
 import signal
 import sys
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+
+# Configure app for GitHub Pages
+app.config['APPLICATION_ROOT'] = '/databoard'
+app.config['PREFERRED_URL_SCHEME'] = 'https'
 
 # Load and process the data
 logger.info("\n=== Loading and Processing Data ===")
@@ -127,10 +132,24 @@ atexit.register(cleanup)
 signal.signal(signal.SIGINT, lambda s, f: sys.exit(0))
 signal.signal(signal.SIGTERM, lambda s, f: sys.exit(0))
 
+# URL generation helper
+def get_base_url():
+    if os.environ.get('GITHUB_ACTIONS'):
+        return 'https://databoardss.github.io/databoard'
+    return ''
+
+# Register URL processors
+@app.context_processor
+def utility_processor():
+    def asset_url(path):
+        base = get_base_url()
+        return f"{base}/{path.lstrip('/')}"
+    return dict(asset_url=asset_url)
+
 if __name__ == '__main__':
-    port = find_free_port()
+    port = find_free_port(5006, 5010)
     if port is None:
-        print("No free ports found between 5002 and 5010")
+        print("No free ports found between 5006 and 5010")
         sys.exit(1)
     
     print(f"\nStarting server on port {port}")
