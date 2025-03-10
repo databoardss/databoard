@@ -3,8 +3,8 @@ from app import app
 
 # Configure Freezer for GitHub Pages
 app.config['FREEZER_DESTINATION'] = 'build'
-app.config['FREEZER_BASE_URL'] = 'https://databoardss.github.io/databoard/'
 app.config['FREEZER_RELATIVE_URLS'] = True
+app.config['FREEZER_REMOVE_EXTRA_FILES'] = False  # Keep existing files
 
 freezer = Freezer(app)
 

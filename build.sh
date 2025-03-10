@@ -13,10 +13,17 @@ cp -r static/* build/
 # Generate static files
 python freeze.py
 
-# Copy index.html to root
-cp templates/index.html build/index.html
+# Ensure index.html is in the root
+if [ ! -f "build/index.html" ]; then
+    cp templates/index.html build/index.html
+fi
 
-# Create .nojekyll file to prevent GitHub Pages from using Jekyll
-touch build/.nojekyll
+# Create necessary GitHub Pages files
+touch build/.nojekyll  # Prevent Jekyll processing
+echo "databoard.work" > build/CNAME  # Set custom domain
+
+# Print directory structure for verification
+echo "Build directory contents:"
+ls -la build/
 
 echo "Build completed. Files ready for GitHub Pages deployment." 
