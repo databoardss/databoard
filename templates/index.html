@@ -6,7 +6,7 @@
     <title>Housing Data Dashboard</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter2/1.5.4/crossfilter.min.js"></script>
-    <link href="whatghttps://cdn.jsdelivr.net/npm/nouislider@14.6.3/distribute/nouislider.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/nouislider@14.6.3/distribute/nouislider.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/nouislider@14.6.3/distribute/nouislider.min.js"></script>
     <style>
         body {
@@ -37,6 +37,7 @@
             display: flex;
             flex-direction: column;
             align-items: flex-end;
+            max-width: 35%;
         }
 
         .dashboard-title-row {
@@ -112,43 +113,36 @@
             margin-bottom: 20px;
             width: 100%;
             position: relative;
+            min-width: 300px;
         }
 
         .date-range-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
             border-bottom: 1px solid #eee;
+            gap: 10px;
         }
 
         #date-slider {
-            width: 85%;
-            margin: 25px auto;
+            width: 100%;
+            margin: 45px 0 25px 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .date-range-bounds {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            color: #666;
-            margin: 10px auto;
-            width: 85%;
+        .noUi-target {
+            height: 8px;
+            border: none;
+            background: #e9ecef;
+            box-shadow: none;
+            border-radius: 4px;
         }
 
-        .date-range-title {
-            font-weight: 600;
-            font-size: 16px;
-            color: #2c3e50;
-            margin: 0;
-        }
-
-        .date-range-label {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
-            color: #666;
+        .noUi-connects {
+            border-radius: 4px;
         }
 
         .noUi-connect {
@@ -160,17 +154,17 @@
             border-radius: 50%;
             background: white;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             width: 20px !important;
             height: 20px !important;
             right: -10px !important;
-            top: -8px !important;
+            top: -7px !important;
             transition: all 0.2s ease;
         }
 
         .noUi-handle:hover {
             transform: scale(1.1);
-            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.25);
         }
 
         .noUi-handle:before,
@@ -178,21 +172,49 @@
             display: none;
         }
 
-        .noUi-target {
-            height: 4px;
-            border: none;
-            background: #e9ecef;
-            box-shadow: none;
-            border-radius: 2px;
-        }
-
         .noUi-tooltip {
+            display: block !important;
             background: #2c3e50;
             color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 5px 10px;
             font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            white-space: nowrap;
+        }
+
+        .date-range-bounds {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #666;
+            margin: 0 0 10px 0;
+            width: 100%;
+            font-weight: 500;
+        }
+
+        .date-range-title {
+            font-weight: 600;
+            font-size: 15px;
+            color: #2c3e50;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .date-range-label {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .date-range-selected {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #2c3e50;
+            font-weight: 500;
         }
 
         .reset-btn {
@@ -263,6 +285,39 @@
         .point {
             cursor: pointer;
             transition: r 0.2s, fill 0.2s;
+        }
+
+        .data-table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
         }
     </style>
 </head>
@@ -397,7 +452,6 @@
 
         // Function to safely parse date string
         function parseDate(dateStr) {
-            if (dateStr instanceof Date) return dateStr;
             try {
                 const date = new Date(dateStr);
                 return isValidDate(date) ? date : null;
@@ -461,16 +515,16 @@
             }
             
             try {
-                // Get the actual date range directly from raw data
+                // Parse dates from raw data
                 const allDates = rawData.map(d => new Date(d.sale_date));
                 const fixedStartDate = new Date(Math.min(...allDates));
                 const fixedEndDate = new Date(Math.max(...allDates));
 
-                // Display the date bounds with improved formatting
+                // Display the date bounds
                 document.getElementById('date-range-start').textContent = formatDate(fixedStartDate);
                 document.getElementById('date-range-end').textContent = formatDate(fixedEndDate);
 
-                // Initialize the slider
+                // Initialize or reinitialize the slider
                 if (dateSlider) {
                     dateSlider.destroy();
                 }
@@ -499,50 +553,51 @@
                         from: function(value) {
                             return Number(value);
                         }
-                    }
+                    },
+                    behaviour: 'drag-tap',
+                    animate: true,
+                    animationDuration: 300
                 });
 
-                // Initial filter application
-                dateDim.filter(d => {
-                    const date = new Date(d);
-                    return date >= fixedStartDate && date <= fixedEndDate;
-                });
-
-                // Update on slider change with smoother animation
+                // Update on slider change
                 dateSlider.on('update', function(values, handle) {
-                    try {
-                        const [startTime, endTime] = values.map(Number);
-                        const startDate = new Date(startTime);
-                        const endDate = new Date(endTime);
-                        
-                        document.getElementById('date-range-selected').textContent = 
-                            `${formatDate(startDate)} - ${formatDate(endDate)}`;
-                    } catch (error) {
-                        console.error('Error updating date range display:', error);
-                    }
+                    const [startTime, endTime] = values.map(Number);
+                    const startDate = new Date(startTime);
+                    const endDate = new Date(endTime);
+                    
+                    document.getElementById('date-range-selected').textContent = 
+                        `Selected: ${formatDate(startDate)} - ${formatDate(endDate)}`;
+
+                    // Ensure tooltips are always visible
+                    slider.querySelectorAll('.noUi-tooltip').forEach(tooltip => {
+                        tooltip.style.display = 'block';
+                    });
                 });
 
-                dateSlider.on('set', debounce(function(values) {
-                    try {
-                        const [startTime, endTime] = values.map(Number);
-                        const startDate = new Date(startTime);
-                        const endDate = new Date(endTime);
-                        
-                        // Apply filter with animation
-                        dateDim.filter(d => {
-                            const date = new Date(d);
-                            return date >= startDate && date <= endDate;
-                        });
+                // Apply filter when slider stops
+                dateSlider.on('change', function(values) {
+                    const [startTime, endTime] = values.map(Number);
+                    const startDate = new Date(startTime);
+                    const endDate = new Date(endTime);
+                    
+                    // Add one day to end date to include the full day
+                    const adjustedEndDate = new Date(endDate);
+                    adjustedEndDate.setDate(adjustedEndDate.getDate() + 1);
+                    
+                    dateDim.filter(d => {
+                        const date = new Date(d);
+                        return date >= startDate && date < adjustedEndDate;
+                    });
 
-                        // Update visualizations
-                        updateAllVisualizations();
-                    } catch (error) {
-                        console.error('Error applying date filter:', error);
-                    }
-                }, 100));
+                    updateAllVisualizations();
+                });
 
-                // Initial update of visualizations
-                updateAllVisualizations();
+                // Ensure tooltips are visible initially
+                setTimeout(() => {
+                    slider.querySelectorAll('.noUi-tooltip').forEach(tooltip => {
+                        tooltip.style.display = 'block';
+                    });
+                }, 100);
 
             } catch (error) {
                 console.error('Error creating date slider:', error);
@@ -1096,7 +1151,7 @@
                 locationDim.filterAll();
                 dateDim.filterAll();
                 
-                // Reset date slider to actual date range from raw data
+                // Reset date slider to full range
                 const allDates = rawData.map(d => new Date(d.sale_date));
                 const startDate = new Date(Math.min(...allDates));
                 const endDate = new Date(Math.max(...allDates));
@@ -1110,14 +1165,10 @@
                     .classed("selected", false)
                     .style("opacity", 1);
                 
-                // Update everything
+                // Update visualizations
                 updateAllVisualizations();
-                
-                // Update the selected range text
-                document.getElementById('date-range-selected').textContent = 
-                    `Selected Range: ${formatDate(startDate)} - ${formatDate(endDate)}`;
             } catch (error) {
-                console.error('Error resetting dashboard:', error);
+                console.error('Error resetting filters:', error);
             }
         }
     </script>
