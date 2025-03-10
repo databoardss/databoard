@@ -16,7 +16,13 @@ app = Flask(__name__)
 
 # Configure app for GitHub Pages
 app.config['APPLICATION_ROOT'] = '/databoard'
-app.config['PREFERRED_URL_SCHEME'] = 'https'
+
+# URL Prefix configuration
+if os.environ.get('GITHUB_ACTIONS'):
+    app.config['PREFERRED_URL_SCHEME'] = 'https'
+    app.config['APPLICATION_ROOT'] = '/databoard'
+else:
+    app.config['APPLICATION_ROOT'] = ''
 
 # Remove server name configuration as it's causing conflicts
 app.config.pop('SERVER_NAME', None)
@@ -137,16 +143,18 @@ signal.signal(signal.SIGTERM, lambda s, f: sys.exit(0))
 
 # URL generation helper
 def get_base_url():
-    if os.environ.get('GITHUB_ACTIONS'):
-        return '/databoard'
-    return ''
+    return app.config['APPLICATION_ROOT']
 
 # Register URL processors
 @app.context_processor
 def utility_processor():
     def asset_url(path):
         base = get_base_url()
-        return f"{base}/{path.lstrip('/')}"
+        # Handle both absolute and relative paths
+        path = path.lstrip('/')
+        if base:
+            return f"{base}/{path}"
+        return f"/{path}"
     return dict(asset_url=asset_url)
 
 if __name__ == '__main__':
