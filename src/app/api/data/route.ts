@@ -12,27 +12,29 @@ export async function GET() {
     // Parse CSV data
     const lines = fileContent.split('\n');
     const headers = lines[0].split(',');
-    const data: HousingData[] = lines.slice(1).map(line => {
-      const values = line.split(',');
-      return {
-        id: parseInt(values[0]),
-        price: parseFloat(values[1]),
-        num_rooms: parseInt(values[2]),
-        num_bathrooms: parseInt(values[3]),
-        square_footage: parseFloat(values[4]),
-        year_built: parseInt(values[5]),
-        garage: values[6] === 'true',
-        pool: values[7] === 'true',
-        location: values[8],
-        days_on_market: parseInt(values[9]),
-        neighborhood: values[10],
-        lot_size: parseFloat(values[11]),
-        condition: values[12],
-        lat: parseFloat(values[13]),
-        long: parseFloat(values[14]),
-        sale_date: values[15]
-      };
-    });
+    const data: HousingData[] = lines.slice(1)
+      .filter(line => line.trim()) // Filter out empty lines
+      .map(line => {
+        const values = line.split(',');
+        return {
+          id: parseInt(values[0]),
+          price: parseFloat(values[1]),
+          num_rooms: parseInt(values[2]),
+          num_bathrooms: parseInt(values[3]),
+          square_footage: parseFloat(values[4]),
+          year_built: parseInt(values[5]),
+          garage: values[6] === 'true',
+          pool: values[7] === 'true',
+          location: values[8],
+          days_on_market: parseInt(values[9]),
+          neighborhood: values[10],
+          lot_size: parseFloat(values[11]),
+          condition: values[12],
+          lat: parseFloat(values[13]),
+          long: parseFloat(values[14]),
+          sale_date: values[15].trim()
+        };
+      });
 
     // Aggregate data by neighborhood
     const aggregatedData = data.reduce((acc: { [key: string]: any }, curr) => {
@@ -57,8 +59,9 @@ export async function GET() {
 
     // Get date range
     const dates = data.map(d => new Date(d.sale_date));
-    const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
-    const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+    const validDates = dates.filter(d => !isNaN(d.getTime())); // Filter out invalid dates
+    const minDate = new Date(Math.min(...validDates.map(d => d.getTime())));
+    const maxDate = new Date(Math.max(...validDates.map(d => d.getTime())));
 
     const response: ApiResponse = {
       records: Object.values(aggregatedData),
